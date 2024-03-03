@@ -3,15 +3,18 @@ const path = require("path");
 const dotenv = require("dotenv");
 const morgan = require("morgan");
 const AppError = require("./utils/AppError");
+
 const GlobalErrorHandler = require("./middlewares/GlobalErrorHandler");
 const databaseConect = require("./config/databaseConect");
 const serverRoutes = require("./utils");
+const { webhookCheckout } = require("./controllers/orderController");
 
 const app = express();
 dotenv.config({ path: "config.env" });
 if (process.env.NODE_ENV === "dev") {
   app.use(morgan("dev"));
 }
+app.post("/webhook",express.raw({ type: 'application/json' }),webhookCheckout)
 app.use(express.json());
 app.use(express.static(path.join(__dirname,'uploads')))
 databaseConect();

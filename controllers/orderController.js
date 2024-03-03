@@ -154,7 +154,7 @@ const createOrder = async(session) => {
   if(!user) {
     throw new AppError("user not found", 404);
   }
-  return await orderModel.create({
+  await orderModel.create({
     user: user._id,
     cartItems,
     totalOrderPrice,
@@ -163,6 +163,7 @@ const createOrder = async(session) => {
     isPaid: true,
     paidAt: Date.now()
   })
+  await cartModel.findByIdAndDelete(cartId)
 };
 
 
@@ -179,7 +180,7 @@ exports.webhookCheckout = expressAsyncHandler(async (req, res, next) => {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
   if (event.type === 'checkout.session.completed') {
-    createOrder(event.data.object);
+    await createOrder(event.data.object);
   }
   res.status(200).json({ received: true });
 });
