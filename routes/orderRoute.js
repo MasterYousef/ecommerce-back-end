@@ -5,7 +5,7 @@ const orderController = require("../controllers/orderController");
 
 const router = express.Router();
 
-router.post("/webhook", orderController.webhookCheckout)
+router.post("/webhook",express.raw({ type: 'application/json' }),orderController.webhookCheckout)
 
 router.use(protect);
 
