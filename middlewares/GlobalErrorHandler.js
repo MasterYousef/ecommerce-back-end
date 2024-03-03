@@ -9,6 +9,7 @@ const tokenError = (err) => {
     err = new AppError("Expired token, please login again..", 401);
     return err;
   }
+  return err;
 };
 const devHandler = (err, res) => {
   if (err.name === "JsonWebTokenError" || err.name === "TokenExpiredError"){
@@ -31,9 +32,10 @@ const prodHandler = (error, res) => {
 const globalError = (err, req, res, next) => {
   err.statusCode = err.statusCode || 500;
   err.status = err.status || "error";
+
   if (process.env.NODE_ENV === "dev") {
     devHandler(err, res);
-  } else {
+  }else {
     prodHandler(err, res);
   }
 };
