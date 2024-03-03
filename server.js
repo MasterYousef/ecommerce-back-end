@@ -21,8 +21,9 @@ app.all("*", (req, res, next) => {
   next(new AppError(`cant find this route ${req.originalUrl}`, 400));
 });
 app.use(GlobalErrorHandler);
-const server = app.listen(process.env.port, () =>
-  console.log(`Example app listening on port ${process.env.port}!`)
+const port = process.env.port || 8000
+const server = app.listen(port, () =>
+  console.log(`Example app listening on port ${port}!`)
 );
 process.on("unhandledRejection", (err) => {
   console.log(`error from sans ${err.name} | ${err.message}`);
