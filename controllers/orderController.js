@@ -143,7 +143,7 @@ exports.checkoutSession = expressAsyncHandler(async (req, res, next) => {
   });
 });
 
-const createOrder = async (session) => {
+exports.webhookCreateOrder = async (session) => {
   const cartId = session.client_reference_id;
   const userEmail = session.customer_email;
   const shippingAddress = JSON.parse(session.metadata.shippingAddress);
@@ -167,22 +167,3 @@ const createOrder = async (session) => {
   });
   await cartModel.findByIdAndDelete(cartId);
 };
-
-exports.webhookCheckout = expressAsyncHandler(async (req, res, next) => {
-  const sig = req.headers["stripe-signature"];
-  let event;
-  try {
-    event = Stripe.webhooks.constructEvent(
-      req.body,
-      sig,
-      process.env.stripe_secret
-    );
-  } catch (err) {
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-  if (event.type === "checkout.session.completed") {
-    console.log(`Unhandled event type ${event.type}`);
-    createOrder(event.data.object);
-  }
-  res.status(200).json({ received: true });
-});
