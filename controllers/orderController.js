@@ -172,7 +172,7 @@ exports.webhookCheckout = expressAsyncHandler(async (req, res, next) => {
   let event;
   try {
     event = Stripe.webhooks.constructEvent(
-      req.body,
+      req.rawBody,
       sig,
       process.env.stripe_secret
     );
