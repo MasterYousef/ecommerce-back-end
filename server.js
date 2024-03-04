@@ -19,13 +19,14 @@ if (process.env.NODE_ENV === "dev") {
 // Middleware for parsing raw JSON requests for Stripe webhook
 app.post("/webhook", express.raw({ type: 'application/json' }), async (req, res, next) => {
   console.log("webhook work");
-  console.log(req.body);
+  const data = req.body.toString('utf8');
+  console.log(data);
   const sig = req.headers["stripe-signature"];
   let event;
   try {
     // Ensure req.body is used for signature verification
     event = Stripe.webhooks.constructEvent(
-      req.body,
+      data,
       sig,
       process.env.stripe_secret
     );
