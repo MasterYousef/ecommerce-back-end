@@ -173,7 +173,7 @@ exports.webhookCheckout = expressAsyncHandler(async (req, res, next) => {
   let event;
   try {
     event = Stripe.webhooks.constructEvent(
-      req.rawBody,
+      req.body,
       sig,
       process.env.stripe_secret
     );
@@ -181,6 +181,7 @@ exports.webhookCheckout = expressAsyncHandler(async (req, res, next) => {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
   if (event.type === "checkout.session.completed") {
+    console.log(`Unhandled event type ${event.type}`);
     createOrder(event.data.object);
   }
   res.status(200).json({ received: true });

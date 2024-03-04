@@ -14,9 +14,8 @@ dotenv.config({ path: "config.env" });
 if (process.env.NODE_ENV === "dev") {
   app.use(morgan("dev"));
 }
-app.use(express.json({verify: (req, res, buf) => req.rawBody = buf}));
 app.post("/webhook",express.raw({ type: 'application/json' }),webhookCheckout)
-// app.use(express.json());
+app.use(express.json());
 app.use(express.static(path.join(__dirname,'uploads')))
 databaseConect();
 
