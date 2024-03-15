@@ -6,33 +6,32 @@ class ApiFeatures {
 
   filterAndSearch(modelName) {
     const query = { ...this.queryString };
-    const skipQuerys = ["limit", "sort", "page", "fields"];
+    const skipQuerys = ["limit", "sort", "page", "fields", "keyword"];
     skipQuerys.forEach((v) => delete query[v]);
+    Object.entries(query).map(([key, value]) =>
+      value.length <= 0 ? delete query[key] : null
+    );
     let fillter = JSON.stringify(query);
     fillter = fillter.replace(/\b(gte|gt|lte|lt)\b/g, (v) => `$${v}`);
+    if (Object.keys(JSON.parse(fillter)).length <= 0) {
+      fillter = { price: { $gt: 0 } };
+    }else{
+      fillter = JSON.parse(fillter)
+    }
     let words;
     if (this.queryString.keyword) {
       const keywords = this.queryString.keyword;
       words = {};
       if (modelName === "product") {
-        words.$or = [
+        fillter.$or = [
           { title: { $regex: keywords, $options: "i" } },
-          { description: { $regex: keywords, $options: "i" } },
-          JSON.parse(fillter),
+          { description: { $regex: keywords, $options: "i" } }
         ];
-        this.mongooseQuery = this.mongooseQuery.find(
-          words || JSON.parse(fillter)
-        );
       } else {
-        words.$or = [
-          { name: { $regex: keywords, $options: "i" } },
-          JSON.parse(fillter),
-        ];
+        words.$or = [{ name: { $regex: keywords, $options: "i" } }, fillter];
       }
-      this.mongooseQuery = this.mongooseQuery.find(
-        words || JSON.parse(fillter)
-      );
     }
+    this.mongooseQuery = this.mongooseQuery.find(fillter);
     return this;
   }
 

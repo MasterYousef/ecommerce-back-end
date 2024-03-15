@@ -3,11 +3,17 @@ const path = require("path");
 const dotenv = require("dotenv");
 const morgan = require("morgan");
 const Stripe = require("stripe")(process.env.stripe_secret);
+const rateLimit = require("express-rate-limit");
+const hpp = require('hpp');
+const { default: helmet } = require("helmet");
+const ExpressMongoSanitize = require("express-mongo-sanitize");
 const AppError = require("./utils/AppError");
 const GlobalErrorHandler = require("./middlewares/GlobalErrorHandler");
 const databaseConect = require("./config/databaseConect");
 const serverRoutes = require("./utils");
 const { webhookCreateOrder } = require("./controllers/orderController");
+
+
 
 const app = express();
 dotenv.config({ path: "config.env" });
@@ -15,6 +21,26 @@ dotenv.config({ path: "config.env" });
 if (process.env.NODE_ENV === "dev") {
   app.use(morgan("dev"));
 }
+
+app.use(express.json({ limit: "50kb" }));
+
+app.use(helmet());
+
+app.use(ExpressMongoSanitize());
+
+app.use(hpp());
+
+app.use(rateLimit({
+  windowMs: 60 * 1000, 
+  max:30,
+  message: "too many requests please try again in 1 minute"
+}));
+
+app.use(express.static(path.join(__dirname, 'uploads')));
+
+databaseConect();
+
+serverRoutes(app);
 
 // Middleware for parsing raw JSON requests for Stripe webhook
 app.post("/webhook", express.raw({ type: 'application/json' }), async (req, res, next) => {
@@ -39,14 +65,6 @@ app.post("/webhook", express.raw({ type: 'application/json' }), async (req, res,
   
   res.status(200).json({ received: true });
 });
-
-app.use(express.json());
-
-app.use(express.static(path.join(__dirname, 'uploads')));
-
-databaseConect();
-
-serverRoutes(app);
 
 app.all("*", (req, res, next) => {
   next(new AppError(`Cannot find this route ${req.originalUrl}`, 404));

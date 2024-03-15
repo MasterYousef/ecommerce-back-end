@@ -4,6 +4,7 @@ const validatorMiddleware = require("../../middlewares/ValidationMidleware");
 const subCategory = require("../../models/subCategoryModel");
 const AppError = require("../AppError");
 const category = require("../../models/categoryModel");
+const idValidator = require("./cheackIdValidator");
 
 exports.postProductValidator = [
   check("title")
@@ -105,10 +106,7 @@ exports.postProductValidator = [
     }),
   validatorMiddleware,
 ];
-exports.getProductValidator = [
-  check("id").isMongoId().withMessage("Invalid ID formate"),
-  validatorMiddleware,
-];
+exports.getProductValidator = idValidator("product")
 
 exports.updateProductValidator = [
   check("id").isMongoId().withMessage("Invalid ID formate"),
