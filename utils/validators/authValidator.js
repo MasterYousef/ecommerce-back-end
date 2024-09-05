@@ -13,6 +13,9 @@ exports.signUpValidator = [
     .isLength({ max: 25 })
     .withMessage("to long user name")
     .custom((val, { req }) => {
+      console.log(req);
+      console.log(req.body);
+      
       req.body.slug = slugify(val);
       return true;
     }),
