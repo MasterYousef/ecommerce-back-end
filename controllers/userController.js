@@ -1,4 +1,5 @@
 const expressAsyncHandler = require("express-async-handler");
+const { default: mongoose } = require("mongoose");
 const bcrypt = require("bcryptjs");
 const MainController = require("./mainControllers");
 const {
@@ -139,10 +140,9 @@ exports.getUserFavoriteList = expressAsyncHandler(async (req, res, next) => {
 });
 
 exports.postAddress = expressAsyncHandler(async (req, res, next) => {
-  await userModel.findByIdAndUpdate(
-    req.user._id,
-    { $addToSet: { addresses: req.body } }
-  );
+  await userModel.findByIdAndUpdate(req.user._id, {
+    $addToSet: { addresses: req.body },
+  });
   res.status(200).json({
     status: "success",
     message: "address added successfully to your acount.",
@@ -150,10 +150,9 @@ exports.postAddress = expressAsyncHandler(async (req, res, next) => {
 });
 
 exports.deleteAddress = expressAsyncHandler(async (req, res, next) => {
-  await userModel.findByIdAndUpdate(
-    req.user._id,
-    { $set: { addresses: {_id:req.params.id} } }
-  );
+  await userModel.findByIdAndUpdate(req.user._id, {
+    $pull: { addresses: { _id: req.params.id } },
+  });
   res.status(200).json({
     status: "success",
     message: "address deleted successfully from your acount.",
@@ -163,15 +162,15 @@ exports.deleteAddress = expressAsyncHandler(async (req, res, next) => {
 exports.updateAddress = expressAsyncHandler(async (req, res, next) => {
   let updateOps = {};
 
- Object.entries(req.body).forEach(([key, value]) => {
-  updateOps[`addresses.$[elem].${key}`] = value;
-});
+  Object.entries(req.body).forEach(([key, value]) => {
+    updateOps[`addresses.$[elem].${key}`] = value;
+  });
   const updatedUser = await userModel.findByIdAndUpdate(
     req.user._id,
     { $set: updateOps },
     {
       new: true,
-      arrayFilters: [{ "elem._id": req.params.id }]
+      arrayFilters: [{ "elem._id": req.params.id }],
     }
   );
 
@@ -182,16 +181,43 @@ exports.updateAddress = expressAsyncHandler(async (req, res, next) => {
   res.status(200).json({
     status: "success",
     message: "Address updated successfully.",
-    data: updatedUser.addresses
+    data: updatedUser.addresses,
   });
 });
 
-
 exports.getUserAddresses = expressAsyncHandler(async (req, res, next) => {
-  const data = await userModel.findById(req.user._id).populate("addresses");
+  const data = await userModel.findById(req.user._id).select("addresses");
   res.status(200).json({
     status: "success",
     resault: data.addresses.length,
     addresses: data.addresses,
+  });
+});
+
+exports.getUserAddress = expressAsyncHandler(async (req, res, next) => {
+  const addressId = new mongoose.Types.ObjectId(req.params.id);
+  console.log(addressId);
+
+  const user = await userModel
+    .findOne({ "addresses._id": addressId })
+    .select("addresses");
+  if (!user) {
+    return res.status(404).json({
+      status: "fail",
+      message: "User or address not found",
+    });
+  }
+  const address = user.addresses.find(
+    (e) => e._id.toString() === req.params.id
+  );
+  if (!address) {
+    return res.status(404).json({
+      status: "fail",
+      message: "Address not found",
+    });
+  }
+  res.status(200).json({
+    status: "success",
+    data: address,
   });
 });

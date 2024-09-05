@@ -18,7 +18,6 @@ const orderOptins = new mongoose.Schema(
         price: Number,
       },
     ],
-
     taxPrice: {
       type: Number,
       default: 0,
@@ -60,7 +59,7 @@ orderOptins.pre(/^find/, function (next) {
     select: 'name image email phone',
   }).populate({
     path: 'cartItems.product',
-    select: 'title imageCover ',
+    select: 'title imageCover ratingsQuantity ratingsAverage',
   }).populate({
     path: 'shippingAddress',
   });

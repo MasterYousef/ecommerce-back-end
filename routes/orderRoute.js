@@ -9,6 +9,11 @@ router.use(protect);
 
 router
   .route("/:id")
+  .get(
+    permissions("admin"),
+    orderValidator.getOneOrderValidator,
+    orderController.getOneOrder
+  )
   .post(
     permissions("user"),
     orderValidator.createOrderValidator,
@@ -41,5 +46,9 @@ router.get(
   orderController.getOrders
 );
 
-router.post("/checkout/session",permissions("user"), orderController.checkoutSession)
+router.post(
+  "/checkout/session",
+  permissions("user"),
+  orderController.checkoutSession
+);
 module.exports = router;

@@ -33,12 +33,12 @@ exports.signUpValidator = [
     .isLength({ min: 6 })
     .withMessage("too short password")
     .custom((password, { req }) => {
-      if (password !== req.body.passwordConfirm) {
+      if (password !== req.body.newPasswordConfirm) {
         throw new Error("Password Confirmation incorrect");
       }
       return true;
     }),
-  check("passwordConfirm")
+  check("newPasswordConfirm")
     .notEmpty()
     .withMessage("Password confirmation required"),
   ValidationMidleware,

@@ -16,4 +16,6 @@ exports.updateIsPaidValidator = idValidator();
 
 exports.updateisDeliveredValidator = idValidator();
 
+exports.getOneOrderValidator = idValidator();
+
 exports.deleteOrderValidator = idValidator();

@@ -12,6 +12,8 @@ const couponOption = mongoose.Schema({
     discount:{
         type:Number,
         required:[true,'coupon discount is required'],
+        max:[100,"max discount is 100"],
+        min:[1,"min discount is 1"]
     },
     expire:{
         type:Date,

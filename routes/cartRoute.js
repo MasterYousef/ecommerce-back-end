@@ -16,11 +16,17 @@ router
   .get(cartController.getUserCart)
   .delete(cartController.DeleteUserCart);
 
-router.delete(
-  "/:id",
-  cartValidator.deleteProductFromCartValidator,
-  cartController.deleteProductFromCart
-);
+router
+  .route("/:id")
+  .put(
+    cartValidator.deleteProductFromCartValidator,
+    cartController.deleteProductFromCart
+  )
+  .patch(cartValidator.updateQuantityValidator, cartController.updateQuantity);
 
-router.post("/couponDiscount", cartValidator.cartDiscountValidator, cartController.cartDiscount)
+router.post(
+  "/couponDiscount",
+  cartValidator.cartDiscountValidator,
+  cartController.cartDiscount
+);
 module.exports = router;

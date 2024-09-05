@@ -14,15 +14,16 @@ exports.getAll = (Model, modelName) =>
     if (req.filterObj) {
       filter = req.filterObj;
     }
-    const count = await Model.countDocuments();
-    const apiFeatures = new ApiFeatures(Model.find(filter), req.query)
+    const apiFeatures = new ApiFeatures(Model,Model.find(filter), req.query)
       .filterAndSearch(modelName)
       .sort()
-      .limitFields()
-      .paginate(count);
-    const data = await apiFeatures.mongooseQuery;
+      .limitFields();
+
+    const totalResults = await apiFeatures.count
+    apiFeatures.paginate(totalResults)
+    const data = await apiFeatures.mongooseQuery;    
     const { paginationResult } = apiFeatures;
-    res.status(201).json({ results: data.length, paginationResult, data });
+    res.status(201).json({ results: data.length,totalResults , paginationResult, data });
   });
 exports.getOne = (Model) =>
   expressAsyncHandler(async (req, res, next) => {

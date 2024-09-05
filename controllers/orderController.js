@@ -10,6 +10,8 @@ const AppError = require("../utils/AppError");
 const productModel = require("../models/productModel");
 const userModel = require("../models/userModel");
 
+exports.getOneOrder = MainController.getOne(orderModel)
+
 exports.createtOrder = expressAsyncHandler(async (req, res, next) => {
   let taxPrice = 0;
   let shippingPrice = 0;
@@ -46,7 +48,7 @@ exports.createtOrder = expressAsyncHandler(async (req, res, next) => {
   }));
   productModel.bulkWrite(operations, {});
   await cartModel.findByIdAndDelete(cart._id);
-  res.status(201).json({ status: "sucsses", data: order });
+  res.status(201).json({ status: "success", data: order });
 });
 
 exports.orderPermission = expressAsyncHandler((req, res, next) => {
@@ -83,6 +85,7 @@ exports.updateisDelivered = expressAsyncHandler(async (req, res, next) => {
 exports.deleteOrder = MainController.deleteOne(orderModel);
 
 exports.checkoutSession = expressAsyncHandler(async (req, res, next) => {
+  const frontendUrl = req.get('Origin') || req.get('Referer');
   const checkAddress = req.user.addresses.findIndex(
     (item) => item._id.toString() === req.body.shippingAddress
   );
@@ -134,8 +137,8 @@ exports.checkoutSession = expressAsyncHandler(async (req, res, next) => {
       ...items,
       shippingAddress: JSON.stringify(address),
     },
-    success_url: `${req.protocol}://${req.get("host")}/order`,
-    cancel_url: `${req.protocol}://${req.get("host")}/cart`,
+    success_url: `${frontendUrl}/user/allorders`,
+    cancel_url: `${frontendUrl}/Cart`,
   });
   res.status(200).json({
     status: "success",

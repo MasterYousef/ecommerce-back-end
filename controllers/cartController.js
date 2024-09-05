@@ -24,13 +24,15 @@ exports.postproductToCart = expressAsyncHandler(async (req, res, next) => {
       ],
       user: req.user._id,
     });
-    res
-      .status(200)
-      .json({ status: "success", message: "product added successfully" });
+    res.status(200).json({
+      status: "success",
+      numOfCartItems: cart.productItems.length,
+      message: "product added successfully",
+    });
   } else {
     const productIndex = cart.productItems.findIndex(
       (item) =>
-        item.product.toString() === req.body.product &&
+        item.product._id.toString() === req.body.product &&
         item.color === req.body.color
     );
     if (productIndex === -1) {
@@ -45,9 +47,11 @@ exports.postproductToCart = expressAsyncHandler(async (req, res, next) => {
     cartPriceCounter(cart);
     cart.totalPriceAfterDiscount = undefined;
     cart.save();
-    res
-      .status(200)
-      .json({ status: "success", message: "product added successfully" });
+    res.status(200).json({
+      status: "success",
+      numOfCartItems: cart.productItems.length,
+      message: "product added successfully",
+    });
   }
 });
 
@@ -58,30 +62,52 @@ exports.getUserCart = expressAsyncHandler(async (req, res, next) => {
   }
   cartPriceCounter(cart);
   cart.save();
-  res.status(200).json({ status: "success", data: cart });
+  res.status(200).json({
+    status: "success",
+    numOfCartItems: cart.productItems.length,
+    data: cart,
+  });
+});
+
+exports.updateQuantity = expressAsyncHandler(async (req, res, next) => {
+  const cart = await cartModel.findOneAndUpdate(
+    {
+      user: req.user._id,
+    },
+    { $set: { "productItems.$[elem].quantity": req.body.quantity } }
+    ,{new:true,arrayFilters:[{ "elem.product": req.params.id ,"elem.color": req.body.color}]}
+  );
+  if(!cart){
+    throw new AppError("product not found in cart", 404);
+  }
+  res.status(200).json({status:"success",message:"quantity updated successfly",numOfCartItems: cart.productItems.length,data:cart})
 });
 
 exports.deleteProductFromCart = expressAsyncHandler(async (req, res, next) => {
-  await cartModel.findOneAndUpdate(
+  const cart = await cartModel.findOneAndUpdate(
     { user: req.user._id },
     {
       $pull: {
         productItems: {
           product: req.params.id,
+          color: req.body.color,
         },
       },
-      totalPriceAfterDiscount: undefined,
-    }
+      totalPriceAfterDiscount: null,
+      coupon:null
+    },
+    { new: true }
   );
-
-  res
-    .status(200)
-    .json({ status: "success", message: "product deleted from cart" });
+  res.status(200).json({
+    status: "success",
+    numOfCartItems: cart.productItems.length,
+    message: "product deleted from cart",
+  });
 });
 
 exports.DeleteUserCart = expressAsyncHandler(async (req, res, next) => {
   await cartModel.deleteOne({ user: req.user._id });
-  res.status(200).send();
+  res.status(204).send();
 });
 
 exports.cartDiscount = expressAsyncHandler(async (req, res, next) => {
@@ -95,7 +121,8 @@ exports.cartDiscount = expressAsyncHandler(async (req, res, next) => {
   const cart = await cartModel.findOne({ user: req.user._id });
   cartPriceCounter(cart);
   cart.totalPriceAfterDiscount =
-    cart.totalPrice - (coupon.discount / 100) * cart.totalPrice;
+  cart.totalPrice - (coupon.discount / 100) * cart.totalPrice;
+  cart.coupon = req.body.coupon
   cart.save();
   res.status(200).json({
     status: "success",

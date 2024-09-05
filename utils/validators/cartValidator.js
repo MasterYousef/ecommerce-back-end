@@ -8,19 +8,34 @@ exports.postProductToCartValidator = [
   check("product")
     .notEmpty()
     .withMessage("please select a product")
-    .custom(async(product, { req }) => {
+    .custom(async (product, { req }) => {
       const data = await productModel.findById(product);
       if (!data) {
         throw new AppError("Product not found", 404);
       }
-      req.body.price = data.price;
-      return true
+      if (data.priceAfterDiscount) {
+        req.body.price = data.priceAfterDiscount;
+      } else {
+        req.body.price = data.price;
+      }
+      return true;
     }),
   check("color").notEmpty().withMessage("Product color required"),
   validatorMiddleware,
 ];
 
-exports.deleteProductFromCartValidator = idValidator("product");
+exports.deleteProductFromCartValidator = [
+  check("id").notEmpty().withMessage("product id is required"),
+  check("color").notEmpty().withMessage("Product color required"),
+  validatorMiddleware,
+];
+
+exports.updateQuantityValidator = [
+  check("id").notEmpty().withMessage("product id is required"),
+  check("quantity").notEmpty().withMessage("Product quantity required"),
+  check("color").notEmpty().withMessage("Product color required"),
+  validatorMiddleware,
+];
 
 exports.cartDiscountValidator = [
   check("coupon")
@@ -28,5 +43,5 @@ exports.cartDiscountValidator = [
     .withMessage("coupon name is required")
     .isLength({ min: 5, max: 30 })
     .withMessage("minemum length is 5 and maxemum length is 30"),
-    validatorMiddleware
+  validatorMiddleware,
 ];

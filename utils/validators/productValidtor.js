@@ -48,15 +48,9 @@ exports.postProductValidator = [
       }
       return true;
     }),
-  check("colors")
-    .optional()
-    .isArray()
-    .withMessage("availableColors should be array of string"),
+  check("colors").notEmpty().withMessage("product must have a color"),
   check("imageCover").notEmpty().withMessage("Product imageCover is required"),
-  check("images")
-    .optional()
-    .isArray()
-    .withMessage("images should be array of string"),
+  check("images").optional().notEmpty().withMessage("add one image at latest"),
   check("category")
     .notEmpty()
     .withMessage("Product must be belong to a category")
@@ -73,12 +67,18 @@ exports.postProductValidator = [
     .optional()
     .isMongoId()
     .withMessage("Invalid subcategories ID formate")
-    .custom((subcategoriesIds) =>
+    .custom((subcategoriesId) =>
       subCategory
-        .find({ _id: { $exists: true, $in: subcategoriesIds } })
+        .find({ _id: { $exists: true, $in: subcategoriesId } })
         .then((result) => {
-          if (result.length < 1 || result.length !== subcategoriesIds.length) {
-            return Promise.reject(new AppError(`Invalid subcategories Ids`));
+          if (result.length < 1) {
+            return Promise.reject(new AppError(`Invalid subcategories Id`));
+          }
+          if (
+            Array.isArray(subcategoriesId) &&
+            result.length !== subcategoriesId.length
+          ) {
+            return Promise.reject(new AppError(`Invalid subcategories Id`));
           }
         })
     )
@@ -90,7 +90,11 @@ exports.postProductValidator = [
       subcategories.forEach((element) => {
         data.push(`${element._id}`);
       });
-      if (subcategoriesIds.every((v) => data.includes(v)) === false) {
+      if (Array.isArray(subcategoriesIds)) {
+        if (subcategoriesIds.every((v) => data.includes(v)) === false) {
+          throw new AppError(` subcategories not belong to category`);
+        }
+      } else if (data.includes(subcategoriesIds) === false) {
         throw new AppError(` subcategories not belong to category`);
       }
     }),
@@ -106,7 +110,7 @@ exports.postProductValidator = [
     }),
   validatorMiddleware,
 ];
-exports.getProductValidator = idValidator("product")
+exports.getProductValidator = idValidator("product");
 
 exports.updateProductValidator = [
   check("id").isMongoId().withMessage("Invalid ID formate"),
@@ -126,7 +130,8 @@ exports.updateProductValidator = [
     .withMessage("Product description is required")
     .isLength({ max: 500 })
     .withMessage("Too long description"),
-  check("quantity").optional()
+  check("quantity")
+    .optional()
     .notEmpty()
     .withMessage("Product quantity is required")
     .isNumeric()
@@ -135,7 +140,8 @@ exports.updateProductValidator = [
     .optional()
     .isNumeric()
     .withMessage("Product quantity must be a number"),
-  check("price").optional()
+  check("price")
+    .optional()
     .notEmpty()
     .withMessage("Product price is required")
     .isNumeric()
@@ -153,15 +159,10 @@ exports.updateProductValidator = [
       }
       return true;
     }),
-  check("colors")
+  check("colors").optional().notEmpty().withMessage("add one color at latest"),
+  check("images").optional().notEmpty().withMessage("add one image at latest"),
+  check("category")
     .optional()
-    .isArray()
-    .withMessage("availableColors should be array of string"),
-  check("images")
-    .optional()
-    .isArray()
-    .withMessage("images should be array of string"),
-  check("category").optional()
     .notEmpty()
     .withMessage("Product must be belong to a category")
     .isMongoId()
@@ -175,28 +176,47 @@ exports.updateProductValidator = [
     }),
   check("subcategories")
     .optional()
-    .isMongoId()
-    .withMessage("Invalid subcategories ID formate")
-    .custom((subcategoriesIds) =>
-      subCategory
-        .find({ _id: { $exists: true, $in: subcategoriesIds } })
-        .then((result) => {
-          if (result.length < 1 || result.length !== subcategoriesIds.length) {
-            return Promise.reject(new AppError(`Invalid subcategories Ids`));
-          }
-        })
-    )
-    .custom(async (subcategoriesIds, { req }) => {
-      const subcategories = await subCategory.find({
-        category: req.body.category,
-      });
-      const data = [];
-      subcategories.forEach((element) => {
-        data.push(`${element._id}`);
-      });
-      if (subcategoriesIds.every((v) => data.includes(v)) === false) {
-        throw new AppError(` subcategories not belong to category`);
+    .custom((subcategoriesId) => {
+      if (subcategoriesId !== "none") {
+        subCategory
+          .find({ _id: { $exists: true, $in: subcategoriesId } })
+          .then((result) => {
+            if (result.length < 1) {
+              return Promise.reject(new AppError(`Invalid subcategories Id`));
+            }
+            if (
+              Array.isArray(subcategoriesId) &&
+              result.length !== subcategoriesId.length
+            ) {
+              return Promise.reject(new AppError(`Invalid subcategories Id`));
+            }
+          });
+        return true
       }
+      return true
+    })
+    .custom(async (subcategoriesIds, { req }) => {
+      if (subcategoriesIds !== "none") {
+        const data = [];
+        const subcategories = await subCategory.find({
+          category: req.body.category,
+        });
+        if (subcategories.length <= 0) {
+          throw new AppError("can't find category");
+        }
+        subcategories.forEach((element) => {
+          data.push(`${element._id}`);
+        });
+        if (Array.isArray(subcategoriesIds)) {
+          if (subcategoriesIds.every((v) => data.includes(v)) === false) {
+            throw new AppError(`subcategories not belong to category`);
+          }
+        } else if (!data.includes(subcategoriesIds)) {
+          throw new AppError(` subcategories not belong to category`);
+        }
+        return true
+      }
+      return true
     }),
   check("imageCover")
     .optional()

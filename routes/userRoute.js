@@ -54,7 +54,8 @@ router
 router
 
   .route("/userAddresses/:id")
-  .delete(userValidator.deleteAddressValidator, userController.deleteAddress)
+  .get(userValidator.idCheack,userController.getUserAddress)
+  .delete(userValidator.idCheack, userController.deleteAddress)
   .put(userValidator.updateAddressValidator, userController.updateAddress);
 router.use(authController.permissions("admin"));
 

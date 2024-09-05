@@ -1,7 +1,8 @@
 class ApiFeatures {
-  constructor(mongooseQuery, queryString) {
+  constructor(Model,mongooseQuery, queryString) {
     this.mongooseQuery = mongooseQuery;
     this.queryString = queryString;
+    this.Model = Model
   }
 
   filterAndSearch(modelName) {
@@ -12,9 +13,9 @@ class ApiFeatures {
       value.length <= 0 ? delete query[key] : null
     );
     let fillter = JSON.stringify(query);
-    fillter = fillter.replace(/\b(gte|gt|lte|lt)\b/g, (v) => `$${v}`);
+    fillter = fillter.replace(/\b(gte|gt|lte|lt|in)\b/g, (v) => `$${v}`);
     if (Object.keys(JSON.parse(fillter)).length <= 0) {
-      fillter = { price: { $gt: 0 } };
+      fillter = {};
     }else{
       fillter = JSON.parse(fillter)
     }
@@ -32,12 +33,13 @@ class ApiFeatures {
       }
     }
     this.mongooseQuery = this.mongooseQuery.find(fillter);
+    this.count = this.Model.countDocuments(fillter)    
     return this;
   }
 
   sort() {
-    if (this.queryString.sort) {
-      const sortby = this.queryString.sort.split(",").join(" ");
+    if (this.queryString.sort) {      
+      const sortby =`${this.queryString.sort.split(",").join(" ")}`;
       this.mongooseQuery = this.mongooseQuery.sort(sortby);
     }
     return this;
@@ -53,7 +55,7 @@ class ApiFeatures {
     return this;
   }
 
-  paginate(countDocuments) {
+   paginate(countDocuments) {    
     const page = this.queryString.page * 1 || 1;
     const limit = this.queryString.limit * 1 || 9;
     const skip = (page - 1) * limit;
@@ -69,7 +71,6 @@ class ApiFeatures {
       pagination.prev = page - 1;
     }
     this.mongooseQuery = this.mongooseQuery.skip(skip).limit(limit);
-
     this.paginationResult = pagination;
     return this;
   }

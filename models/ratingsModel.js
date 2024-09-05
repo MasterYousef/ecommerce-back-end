@@ -3,7 +3,7 @@ const productModel = require("./productModel");
 
 const ratingOption = mongoose.Schema(
   {
-    title: {
+    comment: {
       type: String,
       minlenght: [2, "too short comment "],
       maxlenght: [50, "the long comment"],

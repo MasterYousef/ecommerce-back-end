@@ -39,13 +39,15 @@ const Option = mongoose.Schema(
     priceAfterDiscount: {
       type: Number,
     },
-    colors: [String],
-
+    colors:{
+      type: [String],
+      required:[true,"product must have a color"],
+    },
     imageCover: {
       type: String,
       required: [true, "Product Image cover is required"],
     },
-    images: [String],
+    images:[String],
     category: {
       type: mongoose.Schema.ObjectId,
       ref: "category",
@@ -54,7 +56,7 @@ const Option = mongoose.Schema(
     subcategories: [
       {
         type: mongoose.Schema.ObjectId,
-        ref: "SubCategory",
+        ref: "subCategory",
       },
     ],
     brand: {
@@ -62,6 +64,7 @@ const Option = mongoose.Schema(
       ref: "brand",
     },
     ratingsAverage: {
+      default:0,
       type: Number,
       min: [1, "Rating must be above or equal 1.0"],
       max: [5, "Rating must be below or equal 5.0"],
@@ -83,12 +86,16 @@ Option.virtual("ratings", {
 Option.pre(/^findOne/, function (next) {
   this.populate({
     path: "category",
-    select: "name -_id",
+    select: "name _id",
   });
   this.populate({
     path: "ratings",
     select: "-user",
   });
+    this.populate({
+      path: 'subcategories',
+      select: 'name _id', 
+    });
   next();
 });
 

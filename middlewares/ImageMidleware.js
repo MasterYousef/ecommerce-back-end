@@ -18,17 +18,19 @@ const ImageHandler = () => {
 };
 exports.imageModelOptions = (options, file) => {
   const setImage = (doc) => {
-    if (doc.image && !doc.image.startsWith(`${process.env.BASE_URL}`)) {
-      const imgUrl = `${process.env.BASE_URL}/${file}/${doc.image}`;
+    if (doc.image && !doc.image.startsWith(`http://${process.env.BASE_URL}`)) {
+      const imgUrl = `http://${process.env.BASE_URL}/${file}/${doc.image}`;
       doc.image = imgUrl;
     }
-    if (doc.imageCover){
-      const imgUrl = `${process.env.BASE_URL}/${file}/${doc.imageCover}`;
+    if (doc.imageCover && !doc.imageCover.startsWith(`http://${process.env.BASE_URL}`)){
+      const imgUrl = `http://${process.env.BASE_URL}/${file}/${doc.imageCover}`;
       doc.imageCover = imgUrl;
     }
     if(doc.images){
       const data = doc.images.map((e) => {
-        e = `${process.env.BASE_URL}/${file}/${e}`;
+        if(!e.startsWith(`http://${process.env.BASE_URL}`)){
+          e = `http://${process.env.BASE_URL}/${file}/${e}`;
+        }
         return e;
       });
       doc.images = data;
@@ -37,7 +39,7 @@ exports.imageModelOptions = (options, file) => {
   const removeImage = (doc) => {
     if (
       doc.image &&
-      doc.image !== `${process.env.BASE_URL}/users/default_user.jpeg`
+      doc.image !== `http://${process.env.BASE_URL}/users/default_user.jpeg`
     ) {
       const image = doc.image.replace(`${process.env.BASE_URL}/`, "");
       fs.unlinkSync(`uploads/${image}`);
@@ -83,7 +85,7 @@ exports.resizeMultiImages = async (req, res, next, name) => {
       .toFile(`uploads/${name}/${fileName}`);
     req.body.imageCover = fileName;
   }
-  if (req.files.images) {
+  if (req.files.images) {    
     const data = await Promise.all(
       req.files.images.map(async (e) => {
         const fileName = `${name}-${uuidv4()}-${Date.now()}.jpeg`;
@@ -93,7 +95,13 @@ exports.resizeMultiImages = async (req, res, next, name) => {
           .toFile(`uploads/${name}/${fileName}`);
         return fileName;
       })
-    );
+    ); 
+    if(Array.isArray(req.body.images)){
+      req.body.images = [...req.body.images, ...data];
+    }else if(typeof req.body.images === "string"){
+      data.push(req.body.images)
+      req.body.images = data;
+    }
     req.body.images = data;
   }
   next();

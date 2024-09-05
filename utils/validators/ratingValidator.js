@@ -5,7 +5,7 @@ const productModel = require("../../models/productModel");
 const ratingModel = require("../../models/ratingsModel");
 
 exports.postRatingValidator = [
-  check("title").optional().notEmpty().withMessage("please write your comment"),
+  check("comment").optional().notEmpty().withMessage("please write your comment"),
   check("rating")
     .notEmpty()
     .withMessage("rating is required")
@@ -27,10 +27,14 @@ exports.postRatingValidator = [
     .withMessage("product id not valid")
     .notEmpty()
     .withMessage("rating must belong to product")
-    .custom(async (val) => {
-      const user = await productModel.findById(val);
-      if (!user) {
+    .custom(async (val,{req}) => {
+      const product = await productModel.findById(val);
+      if (!product) {
         throw new AppError("product not found", 400);
+      }
+      const rating = await ratingModel.findOne({user:req.user,product:val})
+      if(rating){
+        throw new AppError("you have already rated this product", 400)
       }
       return true;
     }),
@@ -59,7 +63,7 @@ exports.deleteRatingValidator = [
 ];
 
 exports.UpdateRatingValidator = [
-  check("title").optional().notEmpty().withMessage("please write your comment"),
+  check("comment").optional().notEmpty().withMessage("please write your comment"),
   check("id")
     .isMongoId()
     .withMessage("Invalid ID formate")
