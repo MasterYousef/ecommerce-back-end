@@ -5,7 +5,7 @@ const dotenv = require("dotenv");
 const morgan = require("morgan");
 const Stripe = require("stripe")(process.env.stripe_secret);
 const rateLimit = require("express-rate-limit");
-const hpp = require('hpp');
+const hpp = require("hpp");
 const helmet = require("helmet"); // Updated import for helmet
 const ExpressMongoSanitize = require("express-mongo-sanitize");
 const AppError = require("./utils/AppError");
@@ -15,6 +15,29 @@ const serverRoutes = require("./utils");
 const { webhookCreateOrder } = require("./controllers/orderController");
 
 const app = express();
+app.post(
+  "/webhook",
+  express.raw({ type: "application/json" }),
+  async (req, res, next) => {
+    const sig = req.headers["stripe-signature"];
+    let event;
+    try {
+      // Ensure req.body is used for signature verification
+      event = await Stripe.webhooks.constructEvent(
+        req.body,
+        sig,
+        process.env.stripe_webhook
+      );
+    } catch (err) {
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+    if (event.type === "checkout.session.completed") {
+      webhookCreateOrder(event.data.object);
+    }
+
+    res.status(200).json({ received: true });
+  }
+);
 dotenv.config({ path: "config.env" });
 
 if (process.env.NODE_ENV === "dev") {
@@ -29,27 +52,31 @@ app.use(helmet());
 app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 
 // Enable CORS before your routes
-app.use(cors({
-  origin: 'http://localhost:3000', 
-  credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS','PATCH']
-}));
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+  })
+);
 
 // Handle pre-flight requests
-app.options('*', cors());
+app.options("*", cors());
 
 app.use(ExpressMongoSanitize());
 
 app.use(hpp());
 
-app.use(rateLimit({
-  windowMs: 60 * 1000, 
-  max: 6,
-  message: "too many requests please try again in 1 minute"
-}));
+app.use(
+  rateLimit({
+    windowMs: 60 * 1000,
+    max: 50,
+    message: "too many requests please try again in 1 minute",
+  })
+);
 
-app.use(express.static(path.join(__dirname, 'uploads')));
+app.use(express.static(path.join(__dirname, "uploads")));
 
 // Connect to database
 databaseConect();
@@ -58,23 +85,6 @@ databaseConect();
 serverRoutes(app);
 
 // Middleware for parsing raw JSON requests for Stripe webhook
-app.post("/webhook", express.raw({ type: 'application/json' }), async (req, res, next) => {
-  const sig = req.headers["stripe-signature"];
-  let event;
-  try {
-    // Ensure req.body is used for signature verification
-    event = Stripe.webhooks.constructEvent(req.body, sig, process.env.stripe_webhook);
-  } catch (err) {
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-  
-  if (event.type === "checkout.session.completed") {
-    console.log(`Unhandled event type ${event.type}`);
-    webhookCreateOrder(event.data.object);
-  }
-  
-  res.status(200).json({ received: true });
-});
 
 // Handle all other routes
 app.all("*", (req, res, next) => {
@@ -85,7 +95,9 @@ app.all("*", (req, res, next) => {
 app.use(GlobalErrorHandler);
 
 const port = process.env.PORT || 8000;
-const server = app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+const server = app.listen(port, () =>
+  console.log(`Example app listening on port ${port}!`)
+);
 
 process.on("unhandledRejection", (err) => {
   console.error(`Unhandled Rejection: ${err.message}`);
