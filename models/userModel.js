@@ -26,6 +26,7 @@ const userOption = mongoose.Schema(
     },
     phone: {
       type: String,
+      required: [true, "user phone is required"],
     },
     image: {
       type: String,
