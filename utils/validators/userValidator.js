@@ -81,6 +81,8 @@ exports.updateUservalidator = [
     }),
   check("phone")
     .optional()
+    .notEmpty()
+    .withMessage("user phone is required")
     .isMobilePhone(["ar-EG", "ar-SA"])
     .withMessage("only EGY and Sa phone numbers are allowed"),
   check("image").optional(),

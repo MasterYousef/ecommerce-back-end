@@ -13,6 +13,7 @@ exports.signup = expressAsyncHandler(async (req, res, next) => {
     slug: req.body.slug,
     email: req.body.email,
     password: req.body.password,
+    phone:req.body.phone
   });
   let token;
   if (data) {

@@ -41,6 +41,11 @@ exports.signUpValidator = [
   check("newPasswordConfirm")
     .notEmpty()
     .withMessage("Password confirmation required"),
+  check("phone")
+    .notEmpty()
+    .withMessage("user phone is required")
+    .isMobilePhone(["ar-EG", "ar-SA"])
+    .withMessage("only EGY and Sa phone numbers are allowed"),
   ValidationMidleware,
 ];
 
