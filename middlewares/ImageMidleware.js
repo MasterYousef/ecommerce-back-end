@@ -3,6 +3,7 @@ const multer = require("multer");
 const sharp = require("sharp");
 const { v4: uuidv4 } = require("uuid");
 const AppError = require("../utils/AppError");
+const path = require("path");
 
 const ImageHandler = () => {
   const multerStorge = multer.memoryStorage();
@@ -22,13 +23,16 @@ exports.imageModelOptions = (options, file) => {
       const imgUrl = `http://${process.env.BASE_URL}/${file}/${doc.image}`;
       doc.image = imgUrl;
     }
-    if (doc.imageCover && !doc.imageCover.startsWith(`http://${process.env.BASE_URL}`)){
+    if (
+      doc.imageCover &&
+      !doc.imageCover.startsWith(`http://${process.env.BASE_URL}`)
+    ) {
       const imgUrl = `http://${process.env.BASE_URL}/${file}/${doc.imageCover}`;
       doc.imageCover = imgUrl;
     }
-    if(doc.images){
+    if (doc.images) {
       const data = doc.images.map((e) => {
-        if(!e.startsWith(`http://${process.env.BASE_URL}`)){
+        if (!e.startsWith(`http://${process.env.BASE_URL}`)) {
           e = `http://${process.env.BASE_URL}/${file}/${e}`;
         }
         return e;
@@ -45,7 +49,10 @@ exports.imageModelOptions = (options, file) => {
       fs.unlinkSync(`uploads/${image}`);
     }
     if (doc.imageCover) {
-      const image = doc.imageCover.replace(`http://${process.env.BASE_URL}/`, "");
+      const image = doc.imageCover.replace(
+        `http://${process.env.BASE_URL}/`,
+        ""
+      );
       fs.unlinkSync(`uploads/${image}`);
     }
     if (doc.images) {
@@ -67,8 +74,9 @@ exports.imageModelOptions = (options, file) => {
 };
 exports.resizeImages = async (req, res, next, name) => {
   const fileName = `${name}-${uuidv4()}-${Date.now()}.jpeg`;
-  if(!fs.existsSync(`uploads/${name}`)){
-    fs.mkdirSync(`uploads/${name}`)
+  const directory = path.join(__dirname, "..", `uploads/${name}`);
+  if (!fs.existsSync(directory)) {
+    fs.mkdirSync(directory, { recursive: true });
   }
   if (req.file) {
     await sharp(req.file.buffer)
@@ -80,6 +88,10 @@ exports.resizeImages = async (req, res, next, name) => {
   next();
 };
 exports.resizeMultiImages = async (req, res, next, name) => {
+  const directory = path.join(__dirname, "..", `uploads/${name}`);
+  if (!fs.existsSync(directory)) {
+    fs.mkdirSync(directory, { recursive: true });
+  }
   if (req.files.imageCover) {
     const fileName = `${name}-${uuidv4()}-${Date.now()}.jpeg`;
     await sharp(req.files.imageCover[0].buffer)
@@ -88,7 +100,7 @@ exports.resizeMultiImages = async (req, res, next, name) => {
       .toFile(`uploads/${name}/${fileName}`);
     req.body.imageCover = fileName;
   }
-  if (req.files.images) {    
+  if (req.files.images) {
     const data = await Promise.all(
       req.files.images.map(async (e) => {
         const fileName = `${name}-${uuidv4()}-${Date.now()}.jpeg`;
@@ -98,11 +110,11 @@ exports.resizeMultiImages = async (req, res, next, name) => {
           .toFile(`uploads/${name}/${fileName}`);
         return fileName;
       })
-    ); 
-    if(Array.isArray(req.body.images)){
+    );
+    if (Array.isArray(req.body.images)) {
       req.body.images = [...req.body.images, ...data];
-    }else if(typeof req.body.images === "string"){
-      data.push(req.body.images)
+    } else if (typeof req.body.images === "string") {
+      data.push(req.body.images);
       req.body.images = data;
     }
     req.body.images = data;
