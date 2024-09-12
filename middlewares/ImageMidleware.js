@@ -41,16 +41,16 @@ exports.imageModelOptions = (options, file) => {
       doc.image &&
       doc.image !== `http://${process.env.BASE_URL}/users/default_user.jpeg`
     ) {
-      const image = doc.image.replace(`${process.env.BASE_URL}/`, "");
+      const image = doc.image.replace(`http://${process.env.BASE_URL}/`, "");
       fs.unlinkSync(`uploads/${image}`);
     }
     if (doc.imageCover) {
-      const image = doc.imageCover.replace(`${process.env.BASE_URL}/`, "");
+      const image = doc.imageCover.replace(`http://${process.env.BASE_URL}/`, "");
       fs.unlinkSync(`uploads/${image}`);
     }
     if (doc.images) {
       doc.images.forEach((e) => {
-        const image = e.replace(`${process.env.BASE_URL}/`, "");
+        const image = e.replace(`http://${process.env.BASE_URL}/`, "");
         fs.unlinkSync(`uploads/${image}`);
       });
     }
@@ -67,6 +67,9 @@ exports.imageModelOptions = (options, file) => {
 };
 exports.resizeImages = async (req, res, next, name) => {
   const fileName = `${name}-${uuidv4()}-${Date.now()}.jpeg`;
+  if(!fs.existsSync(`uploads/${name}`)){
+    fs.mkdirSync(`uploads/${name}`)
+  }
   if (req.file) {
     await sharp(req.file.buffer)
       .resize(700, 700)
