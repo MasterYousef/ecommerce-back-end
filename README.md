@@ -4,7 +4,7 @@ this is my first backend project with my front-end app https://github.com/Master
 1-PORT : the port your app will run on it.
 2-NODE_ENV : dev or production if this mean you work on development or production.
 <br>
-3-BASE_URL : youre base url you will use like localhost:8000.
+3-BASE_URL : youre base url you will use like localhost:8000./n
 4-DB_URI : database url.
 5-jwt_key : jwt key you will use in auth.
 6-jwt_expire : the time the app will take before make jwt expire.
