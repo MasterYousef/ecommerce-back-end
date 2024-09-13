@@ -66,8 +66,6 @@ const Option = mongoose.Schema(
     ratingsAverage: {
       default:0,
       type: Number,
-      min: [1, "Rating must be above or equal 1.0"],
-      max: [5, "Rating must be below or equal 5.0"],
     },
     ratingsQuantity: {
       type: Number,
