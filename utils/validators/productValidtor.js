@@ -98,16 +98,6 @@ exports.postProductValidator = [
         throw new AppError(` subcategories not belong to category`);
       }
     }),
-  check("imageCover")
-    .notEmpty()
-    .withMessage("image cover reqired")
-    .custom((val) => {
-      if (val.endsWith(".jpeg") === false) {
-        throw new AppError("unavailable image format");
-      } else {
-        return true;
-      }
-    }),
   validatorMiddleware,
 ];
 exports.getProductValidator = idValidator("product");
@@ -191,9 +181,9 @@ exports.updateProductValidator = [
               return Promise.reject(new AppError(`Invalid subcategories Id`));
             }
           });
-        return true
+        return true;
       }
-      return true
+      return true;
     })
     .custom(async (subcategoriesIds, { req }) => {
       if (subcategoriesIds !== "none") {
@@ -214,21 +204,11 @@ exports.updateProductValidator = [
         } else if (!data.includes(subcategoriesIds)) {
           throw new AppError(` subcategories not belong to category`);
         }
-        return true
-      }
-      return true
-    }),
-  check("imageCover")
-    .optional()
-    .notEmpty()
-    .withMessage("image cover reqired")
-    .custom((val) => {
-      if (val.endsWith(".jpeg") === false) {
-        throw new AppError("unavailable image format");
-      } else {
         return true;
       }
+      return true;
     }),
+  check("imageCover").optional().notEmpty().withMessage("image cover reqired"),
   validatorMiddleware,
 ];
 

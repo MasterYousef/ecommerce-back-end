@@ -20,7 +20,7 @@ exports.postBrandValidtor = [
     .isLength({ max: 25 })
     .withMessage("Brand name is too long"),
   check("image").notEmpty().withMessage("brand image reqired").custom((val)=>{
-    if(val.endsWith(".jpeg")=== false){
+    if(val.startsWith("https://res.cloudinary.com")=== false){
       throw new AppError('unavailable image format')
     }else{
       return true
