@@ -17,12 +17,16 @@ const cartOption = mongoose.Schema(
     user: { type: mongoose.Schema.ObjectId, ref: "user" },
     totalPrice: Number,
     totalPriceAfterDiscount: Number,
-    coupon:String
+    coupon: { ref: "coupon", type: String },
   },
   { timestamps: true }
 );
 
 cartOption.pre(/^findOne/, function (next) {
+  this.populate({
+    path: "coupon",
+  });
+
   this.populate({
     path: "productItems.product",
     select: "imageCover category brand",
@@ -31,16 +35,15 @@ cartOption.pre(/^findOne/, function (next) {
       select: "name",
     },
   });
-  
+
   this.populate({
     path: "productItems.product",
     select: "imageCover category brand",
     populate: {
       path: "brand",
-      select: "name", // Adjust this according to the fields you need from 'brand'
+      select: "name",
     },
   });
   next();
 });
-
 module.exports = mongoose.model("cart", cartOption);

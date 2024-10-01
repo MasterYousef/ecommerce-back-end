@@ -46,6 +46,7 @@ exports.postproductToCart = expressAsyncHandler(async (req, res, next) => {
     }
     cartPriceCounter(cart);
     cart.totalPriceAfterDiscount = undefined;
+    cart.coupon = undefined;
     cart.save();
     res.status(200).json({
       status: "success",
@@ -61,6 +62,11 @@ exports.getUserCart = expressAsyncHandler(async (req, res, next) => {
     throw new AppError("user Cart not found", 404);
   }
   cartPriceCounter(cart);
+  if (cart.coupon && cart.coupon.discount) {
+    const discount = cart.coupon.discount;
+    const num = cart.totalPrice * (discount / 100);
+    cart.totalPriceAfterDiscount = num;
+  }
   cart.save();
   res.status(200).json({
     status: "success",
@@ -74,13 +80,25 @@ exports.updateQuantity = expressAsyncHandler(async (req, res, next) => {
     {
       user: req.user._id,
     },
-    { $set: { "productItems.$[elem].quantity": req.body.quantity } }
-    ,{new:true,arrayFilters:[{ "elem.product": req.params.id ,"elem.color": req.body.color}]}
+    { $set: { "productItems.$[elem].quantity": req.body.quantity } },
+    {
+      new: true,
+      arrayFilters: [
+        { "elem.product": req.params.id, "elem.color": req.body.color },
+      ],
+    }
   );
-  if(!cart){
+  if (!cart) {
     throw new AppError("product not found in cart", 404);
   }
-  res.status(200).json({status:"success",message:"quantity updated successfly",numOfCartItems: cart.productItems.length,data:cart})
+  res
+    .status(200)
+    .json({
+      status: "success",
+      message: "quantity updated successfly",
+      numOfCartItems: cart.productItems.length,
+      data: cart,
+    });
 });
 
 exports.deleteProductFromCart = expressAsyncHandler(async (req, res, next) => {
@@ -94,7 +112,7 @@ exports.deleteProductFromCart = expressAsyncHandler(async (req, res, next) => {
         },
       },
       totalPriceAfterDiscount: null,
-      coupon:null
+      coupon: null,
     },
     { new: true }
   );
@@ -121,8 +139,8 @@ exports.cartDiscount = expressAsyncHandler(async (req, res, next) => {
   const cart = await cartModel.findOne({ user: req.user._id });
   cartPriceCounter(cart);
   cart.totalPriceAfterDiscount =
-  cart.totalPrice - (coupon.discount / 100) * cart.totalPrice;
-  cart.coupon = req.body.coupon
+    cart.totalPrice - (coupon.discount / 100) * cart.totalPrice;
+  cart.coupon = coupon._id;
   cart.save();
   res.status(200).json({
     status: "success",
