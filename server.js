@@ -35,7 +35,6 @@ app.post(
     if (event.type === "checkout.session.completed") {
       webhookCreateOrder(event.data.object);
     }
-
     res.status(200).json({ received: true });
   }
 );

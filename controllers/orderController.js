@@ -151,22 +151,25 @@ exports.webhookCreateOrder = async (session) => {
   const userEmail = session.customer_email;
   const shippingAddress = JSON.parse(session.metadata.shippingAddress);
   delete session.metadata.shippingAddress;
+  console.log(session.metadata);
+  
   const cartItems = Object.entries(session.metadata).map(([value, key]) =>
     JSON.parse(key)
   );
   const totalOrderPrice = session.amount_total / 100;
   const user = await userModel.findOne({ email: userEmail });
+  console.log(cartItems);
   if (!user) {
     throw new AppError("user not found", 404);
   }
-  await orderModel.create({
-    user: user._id,
-    cartItems,
-    totalOrderPrice,
-    shippingAddress,
-    paymentMethodType: "card",
-    isPaid: true,
-    paidAt: Date.now(),
-  });
+  // await orderModel.create({
+  //   user: user._id,
+  //   cartItems,
+  //   totalOrderPrice,
+  //   shippingAddress,
+  //   paymentMethodType: "card",
+  //   isPaid: true,
+  //   paidAt: Date.now(),
+  // });
   await cartModel.findByIdAndDelete(cartId);
 };
