@@ -108,13 +108,7 @@ exports.checkoutSession = expressAsyncHandler(async (req, res, next) => {
   };
   const items = {};
   cart.productItems.forEach((element, index) => {
-    const simplifiedElement = {
-      product: element.product.toString(),
-      quantity: element.quantity.toString(),
-      color: element.color.toString(),
-      price: element.price.toString(),
-    };
-    items[`value_${index}`] = JSON.stringify(simplifiedElement);
+    items[`value_${index}`] = JSON.stringify(element);
   });
   const session = await Stripe.checkout.sessions.create({
     payment_method_types: ["card"],
@@ -152,10 +146,10 @@ exports.webhookCreateOrder = async (session) => {
   const shippingAddress = JSON.parse(session.metadata.shippingAddress);
   delete session.metadata.shippingAddress;
   console.log(session.metadata);
-  
   const cartItems = Object.entries(session.metadata).map(([value, key]) =>
     JSON.parse(key)
   );
+  console.log(cartItems);
   const totalOrderPrice = session.amount_total / 100;
   const user = await userModel.findOne({ email: userEmail });
   console.log(cartItems);
