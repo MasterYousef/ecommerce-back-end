@@ -108,7 +108,13 @@ exports.checkoutSession = expressAsyncHandler(async (req, res, next) => {
   };
   const items = {};
   cart.productItems.forEach((element, index) => {
-    items[`value_${index}`] = JSON.stringify(element);
+    const data = {
+      product: element.product._id,
+      quantity: element.quantity,
+      color:element.color,
+      price:element.price
+    }
+    items[`value_${index}`] = JSON.stringify(data);
   });
   const session = await Stripe.checkout.sessions.create({
     payment_method_types: ["card"],
@@ -149,21 +155,19 @@ exports.webhookCreateOrder = async (session) => {
   const cartItems = Object.entries(session.metadata).map(([value, key]) =>
     JSON.parse(key)
   );
-  console.log(cartItems);
   const totalOrderPrice = session.amount_total / 100;
   const user = await userModel.findOne({ email: userEmail });
-  console.log(cartItems);
   if (!user) {
     throw new AppError("user not found", 404);
   }
-  // await orderModel.create({
-  //   user: user._id,
-  //   cartItems,
-  //   totalOrderPrice,
-  //   shippingAddress,
-  //   paymentMethodType: "card",
-  //   isPaid: true,
-  //   paidAt: Date.now(),
-  // });
+  await orderModel.create({
+    user: user._id,
+    cartItems,
+    totalOrderPrice,
+    shippingAddress,
+    paymentMethodType: "card",
+    isPaid: true,
+    paidAt: Date.now(),
+  });
   await cartModel.findByIdAndDelete(cartId);
 };
