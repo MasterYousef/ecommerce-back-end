@@ -30,7 +30,7 @@ exports.imageModelOptions = (options, file) => {
     if (doc.image) {
       const url = doc.image.split("/");
       const image = `${url[url.length - 2]}/${url[url.length - 1]}`.replace(
-        ".jpg",
+        ".png",
         ""
       );
       cloudinary.uploader.destroy(image);
@@ -38,7 +38,7 @@ exports.imageModelOptions = (options, file) => {
     if (doc.imageCover) {
       const url = doc.imageCover.split("/");
       const image = `${url[url.length - 2]}/${url[url.length - 1]}`.replace(
-        ".jpg",
+        ".png",
         ""
       );
       cloudinary.uploader.destroy(image);
@@ -47,7 +47,7 @@ exports.imageModelOptions = (options, file) => {
       doc.images.forEach((e) => {
         const url = e.split("/");
         const image = `${url[url.length - 2]}/${url[url.length - 1]}`.replace(
-          ".jpg",
+          ".png",
           ""
         );
         cloudinary.uploader.destroy(image);
@@ -65,7 +65,7 @@ const uploadToCloudinary = (buffer, folder, filename) => {
       .upload_stream(
         {
           folder,
-          public_id: filename.replace(".jpeg", ""),
+          public_id: filename.replace(".png", ""),
           resource_type: "image",
         },
         (err, res) => {
@@ -84,8 +84,8 @@ exports.resizeImages = async (req, res, next, name) => {
   const fileName = `${name}-${uuidv4()}-${Date.now()}.jpeg`;
   if (req.file) {
     const buffer = await sharp(req.file.buffer)
-      .toFormat("jpeg")
-      .jpeg({ quality: 80 })
+      .toFormat("png")
+      .png({quality:80})
       .toBuffer();
     try {
       const imageUrl = await uploadToCloudinary(buffer, `/${name}`, fileName);
@@ -106,7 +106,8 @@ exports.resizeMultiImages = async (req, res, next, name) => {
     const fileName = `${name}-${uuidv4()}-${Date.now()}.jpeg`;
     const buffer = await sharp(req.files.imageCover[0].buffer)
       .resize(700, 700)
-      .toFormat("jpeg")
+      .toFormat("png")
+      .png({quality:80})
       .toBuffer();
     const image = await uploadToCloudinary(buffer, `/${name}`, fileName);
     req.body.imageCover = image;
@@ -117,7 +118,8 @@ exports.resizeMultiImages = async (req, res, next, name) => {
         const fileName = `${name}-${uuidv4()}-${Date.now()}.jpeg`;
         const buffer = await sharp(e.buffer)
           .resize(700, 700)
-          .toFormat("jpeg")
+          .toFormat("png")
+          .png({quality:80})
           .toBuffer();
         const image = await uploadToCloudinary(buffer, `/${name}`, fileName);
         return image;
