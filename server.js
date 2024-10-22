@@ -57,7 +57,7 @@ app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 // Enable CORS before your routes
 app.use(
   cors({
-    origin: "https://masteryousef.github.io/ecommerce-App",
+    origin: "https://masteryousef.github.io",
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
