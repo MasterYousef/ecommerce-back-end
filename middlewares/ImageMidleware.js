@@ -125,7 +125,6 @@ exports.resizeMultiImages = async (req, res, next, name) => {
         return image;
       })
     );
-    console.log(data);
     if (Array.isArray(req.body.images)) {
       req.body.images = [...req.body.images, ...data];
     } else if (typeof req.body.images === "string") {
