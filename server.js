@@ -85,9 +85,6 @@ databaseConect();
 // Apply routes
 serverRoutes(app);
 
-// Middleware for parsing raw JSON requests for Stripe webhook
-
-
 // Handle all other routes
 app.all("*", (req, res, next) => {
   next(new AppError(`Cannot find this route ${req.originalUrl}`, 404));

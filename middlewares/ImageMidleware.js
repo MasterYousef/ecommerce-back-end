@@ -69,7 +69,7 @@ const uploadToCloudinary = (buffer, folder, filename) => {
           resource_type: "image",
         },
         (err, res) => {
-          if (res.secure_url) {
+          if (res?.secure_url) {
             resolve(res.secure_url);
           } else {
             reject("Invalid image file");
