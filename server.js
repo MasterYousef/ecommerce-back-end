@@ -4,7 +4,7 @@ const path = require("path");
 const dotenv = require("dotenv");
 const morgan = require("morgan");
 const Stripe = require("stripe")(process.env.stripe_secret);
-const bodyParser = require("body-parser");
+const bodyParser = require('body-parser');
 const hpp = require("hpp");
 const helmet = require("helmet"); // Updated import for helmet
 const ExpressMongoSanitize = require("express-mongo-sanitize");
@@ -16,27 +16,31 @@ const { webhookCreateOrder } = require("./controllers/orderController");
 
 const app = express();
 
-app.use(express.json());
+app.post(
+  "/webhook",
+  bodyParser.raw({ type: "application/json" }),
+  async (req, res, next) => {
+    console.log(req.body.toString());
+    const sig = req.headers["stripe-signature"];
+    let event;
+    try {
+      // Ensure req.body is used for signature verification
+      event = await Stripe.webhooks.constructEvent(
+        req.body,
+        sig,
+        process.env.stripe_webhook
+      );
+    } catch (err) {
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+    if (event.type === "checkout.session.completed") {
+      webhookCreateOrder(event.data.object);
+    }
+    res.status(200).json({ received: true });
+  }
+);
 
-app.post("/webhook", async (req, res, next) => {
-  console.log(req.body.toString());
-  const sig = req.headers["stripe-signature"];
-  let event;
-  try {
-    // Ensure req.body is used for signature verification
-    event = await Stripe.webhooks.constructEvent(
-      req.body,
-      sig,
-      process.env.stripe_webhook
-    );
-  } catch (err) {
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-  if (event.type === "checkout.session.completed") {
-    webhookCreateOrder(event.data.object);
-  }
-  res.status(200).json({ received: true });
-});
+// app.use(express.json());
 
 app.use(express.static(path.join(__dirname, "uploads")));
 
