@@ -16,7 +16,7 @@ const { webhookCreateOrder } = require("./controllers/orderController");
 
 const app = express();
 
-app.post("/webhook", { type: "application/json" }, async (req, res, next) => {
+app.post("/webhook", async (req, res, next) => {
   console.log(req.body.toString());
   const sig = req.headers["stripe-signature"];
   let event;
