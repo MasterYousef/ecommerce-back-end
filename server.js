@@ -16,6 +16,8 @@ const { webhookCreateOrder } = require("./controllers/orderController");
 
 const app = express();
 
+app.use(express.json());
+
 app.post("/webhook", async (req, res, next) => {
   console.log(req.body.toString());
   const sig = req.headers["stripe-signature"];
@@ -35,8 +37,6 @@ app.post("/webhook", async (req, res, next) => {
   }
   res.status(200).json({ received: true });
 });
-
-app.use(express.json());
 
 app.use(express.static(path.join(__dirname, "uploads")));
 
