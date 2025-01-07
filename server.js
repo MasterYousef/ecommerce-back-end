@@ -50,9 +50,9 @@ if (process.env.NODE_ENV === "dev") {
 }
 
 // Use Helmet for security
-// app.use(helmet());
+app.use(helmet());
 
-// app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
+app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 
 // Enable CORS before your routes
 app.use(
