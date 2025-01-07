@@ -4,7 +4,7 @@ const path = require("path");
 const dotenv = require("dotenv");
 const morgan = require("morgan");
 const Stripe = require("stripe")(process.env.stripe_secret);
-const bodyParser = require('body-parser');
+const bodyParser = require("body-parser");
 const hpp = require("hpp");
 const helmet = require("helmet"); // Updated import for helmet
 const ExpressMongoSanitize = require("express-mongo-sanitize");
@@ -20,7 +20,6 @@ app.post(
   "/webhook",
   bodyParser.raw({ type: "application/json" }),
   async (req, res, next) => {
-    console.log(req.body.toString());
     const sig = req.headers["stripe-signature"];
     let event;
     try {
@@ -51,7 +50,7 @@ if (process.env.NODE_ENV === "dev") {
 }
 
 // Use Helmet for security
-app.use(helmet());
+// app.use(helmet());
 
 app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 
