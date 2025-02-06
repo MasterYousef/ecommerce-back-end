@@ -71,13 +71,13 @@ app.use(ExpressMongoSanitize());
 
 app.use(hpp());
 
-// app.use(
-//   rateLimit({
-//     windowMs: 60 * 1000,
-//     max: 20,
-//     message: "too many requests please try again in 1 minute",
-//   })
-// );
+app.use(
+  rateLimit({
+    windowMs: 60 * 1000,
+    max: 100,
+    message: "too many requests please try again in 1 minute",
+  })
+);
 
 // Connect to database
 databaseConect();
