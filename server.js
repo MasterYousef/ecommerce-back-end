@@ -13,6 +13,7 @@ const GlobalErrorHandler = require("./middlewares/GlobalErrorHandler");
 const databaseConect = require("./config/databaseConect");
 const serverRoutes = require("./utils");
 const { webhookCreateOrder } = require("./controllers/orderController");
+const { default: rateLimit } = require("express-rate-limit");
 
 const app = express();
 
