@@ -58,7 +58,7 @@ app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 // Enable CORS before your routes
 app.use(
   cors({
-    origin: process.env.BASE_URL,
+    origin: [process.env.BASE_URL,'http://localhost:3000'],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
